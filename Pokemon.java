@@ -68,6 +68,18 @@ public class Pokemon {
         return false;
     }
 
+    public boolean isLowHealth(){
+        return this.currentHealth < (int) (this.totalHealth * 0.20);
+    }
+
+    public boolean isHalfHealth(){
+        return this.currentHealth < (int) (this.totalHealth * 0.5);
+    }
+
+    public boolean hasHealthPots(){
+        return this.healthPots >= 1;
+    }
+
     /**
      * random pokemon appears
      * @param level current level of game
@@ -409,10 +421,10 @@ public class Pokemon {
     /**
      * @param opponent of this pokemon
      * @return the move made against opponent... either
-     * "healing pot"
-     * "run away"
-     * "elemental"
-     * "tackle"
+     * "heal" (enemy uses healing pot)
+     * "run" (run away)
+     * "elemental" (special atack with status effect)
+     * "tackle" (basic attack)
      *
      *  -also prints to terminal a message saying what attack is done
      */
@@ -509,6 +521,4 @@ public class Pokemon {
         }
 
     }
-
-
 }

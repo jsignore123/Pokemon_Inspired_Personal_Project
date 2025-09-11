@@ -14,9 +14,9 @@ public class Main {
 
         //TODO: initialize rival trainer
 
-        Person Jessie = new Person("Jessie");
+        Person YOU = new Person("Jessie");
         Pokemon starterPoke = new Pokemon(startingElement);
-        Jessie.addPokemon(starterPoke);
+        YOU.addPokemon(starterPoke);
 
 
         //boolean for, is game still running?
@@ -39,7 +39,7 @@ public class Main {
 
 
             //if enemy spawns
-            if(chance == 0 && !Jessie.hasNoPokemon()){
+            if(chance == 0 && !YOU.hasNoPokemon()){
                 boolean fightOngoing = true;
 
                 Random r2 = new Random(System.currentTimeMillis());
@@ -49,11 +49,11 @@ public class Main {
 
                 System.out.println("A " + enemyEl + " pokemon approaches you with the intention to beat yo ass!");
                 System.out.println("Which pokemon will you pick?");
-                Jessie.printPokemon();
+                YOU.printPokemon();
                 Scanner s3 = new Scanner(System.in);
                 int p = s3.nextInt();
 
-                Pokemon currentPokemon = Jessie.pokePicked(p);
+                Pokemon currentPokemon = YOU.pokePicked(p);
 
 
 
@@ -69,12 +69,12 @@ public class Main {
                     //try to catch it (higher chance lower enemy health)
 
                     boolean missTurn = currentPokemon.status.isFreeze() || currentPokemon.status.isParalysis();
-                    boolean hasHealingPots = Jessie.numHealPots > 0;
+                    boolean hasHealingPots = YOU.numHealPots > 0;
                     String yourMove = "";
 
                     if(!missTurn) {
-                        if (Jessie.hasOnePokemon()) {
-                            currentPokemon = Jessie.pokemons.getFirst();
+                        if (YOU.hasOnePokemon()) {
+                            currentPokemon = YOU.pokemons.getFirst();
                             System.out.println("Would you like to use 'elemental' attack, 'tackle', try to 'run'" + (hasHealingPots ? ", or 'heal'?" : "?"));
 
                             Scanner s1 = new Scanner(System.in);
@@ -123,7 +123,6 @@ public class Main {
                         System.out.println("starterPoke DIED!!! GAME OVER!!!");
                         //TODO: if the player has other pokemon... give option to switch. if not... fight over but could still catch more
                     }
-
                 }
             }
             //TODO: message for when no enemy spawns "..."
