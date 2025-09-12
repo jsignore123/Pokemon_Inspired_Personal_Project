@@ -9,7 +9,7 @@ public class Burn extends StatusEffect {
     }
 
     @Override
-    public boolean appliedCOUNTERS() {
+    public boolean isAppliedWhenCOUNTERS() {
         Random r = new Random();
         return r.nextInt(4) != 0;
     }

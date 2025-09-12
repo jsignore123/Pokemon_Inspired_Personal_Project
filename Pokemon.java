@@ -24,6 +24,14 @@ public class Pokemon {
     public StatusEffect specialAttack = new StatusEffect();
     public StatusEffect status = new StatusEffect();
 
+    public void printStats(String thisPoke){
+        int level = this.level;
+        String element = this.element;
+        String health = this.currentHealth + "/" + this.totalHealth + " health";
+        int baseDmg = this.effectiveBaseDamage;
+        System.out.println(thisPoke + " POKEMON: Level " + level + " " + element + ", " + health + ", " + baseDmg + " damage");
+    }
+
 
 
     public String randomElement(){
@@ -81,7 +89,7 @@ public class Pokemon {
     }
 
     /**
-     * random pokemon appears
+     * Constructor : random pokemon appears!
      * @param level current level of game
      */
     public Pokemon(int level){
@@ -158,7 +166,7 @@ public class Pokemon {
 
 
     /**
-     * starter pokemon picked
+     * Constructor : starter pokemon picked!
      * @param element picked by player for their very first pokemon
      */
     public Pokemon(String element){
@@ -283,7 +291,7 @@ public class Pokemon {
      * @param damage taken
      */
     public void takeDamage(int damage){
-        this.totalHealth -= damage;
+        this.currentHealth -= damage;
     }
 
     /**
@@ -297,8 +305,9 @@ public class Pokemon {
      * pokemon uses healing potion
      * gets rid of paralysis
      */
-    public void healingPot(){
-        this.currentHealth += (int) (this.totalHealth * 0.3);
+    public void heal(){
+        int amountHealed = (int) (this.totalHealth * 0.3);
+        this.currentHealth += amountHealed;
         if(this.currentHealth > this.totalHealth){
             this.currentHealth = this.totalHealth;
         }
@@ -306,10 +315,11 @@ public class Pokemon {
             this.status = new StatusEffect();
             System.out.println("Paralysis removed!");
         }
+
+        System.out.println("Healed for " + amountHealed + "!");
     }
 
     /**
-     *
      * @param se status effect
      * @return whether this pokemon has that status effect
      */
@@ -389,6 +399,7 @@ public class Pokemon {
     }
 
     /**
+     * TODO: override updateXP in other scenarios that xp might be increased ?
      * updates your XP/level after killing an enemy
      * @param enemy killed
      */
@@ -410,115 +421,70 @@ public class Pokemon {
         }
     }
 
-    //TODO: override updateXP in other scenarios that xp might be increased ?
 
-    //grass have spore/seed that life steals
-    //fire blast (20% to cause burn status effect, 5% health DOT, 3 turns)
-    // -element attack (fire blast, spore life steal, etc...)
-    // -base attack immune to element counters (tackle)
-    // -run away (not guaranteed)
-    // -healing potion (30%)
+
     /**
-     * @param opponent of this pokemon
-     * @return the move made against opponent... either
-     * "heal" (enemy uses healing pot)
-     * "run" (run away)
-     * "elemental" (special atack with status effect)
-     * "tackle" (basic attack)
-     *
-     *  -also prints to terminal a message saying what attack is done
+     * Applies the move the pokemon (enemy or you) chooses using decision tree
+     * Prints to terminal
+     * Applies damage/effects/healing
+     * TODO: grass have spore/seed that life steal, fire blast (20% to cause burn status effect, 5% health DOT, 3 turns)
+     * @param opponent the enemy is against (your pokemon)
+     * @param move the enemy picks using decision tree
+     * @param who is making move (for print statements) : "enemy" if enemy is making move, anything else for player
+     * @return whether run was successful
      */
-    public String enemyPicksMove(Pokemon opponent){
-        //"this" is the enemy pokemon
-        //"opponent" is your pokemon
+    public boolean move(Pokemon opponent, String move, String who){
+        // Value needed for print statements
+        String thisPoke = "", otherPoke = "";
+        thisPoke = (who.equals("enemy") ? "The Enemy Pokemon " : "You ");
+        otherPoke = (who.equals("enemy") ? " you " : " the enemy Pokemon ");
 
-        //if below half health and this enemy pokemon has a healing pot... try to heal!
-        if(this.currentHealth < (int) (this.totalHealth * 0.5) && this.healthPots >= 1){
-            System.out.println("The enemy pokemon uses a healing potion!");
-            return "heal";
-        }
+        switch (move) {
+            case "run":
+                Random r1 = new Random();
+                //  1/3 chance to succeed in running
+                boolean success = r1.nextInt(3) == 1;
 
-        //if this enemy has < 1/4 health, try to run!
-        if(this.currentHealth < (int) (this.totalHealth * 0.20)){
-            System.out.println("The enemy pokemon in its bad health tries to run away...");
-            return "run";
-        }
+                System.out.println(thisPoke + "tried to run... " + (success ? " And Succeeded!" : "but failed! :("));
+                return success;
+            case "heal":
+                System.out.println(thisPoke + "used a healing potion!");
+                this.heal();
+                return false;
+            case "elemental": {
+                // apply damage to opponent and print statement
+                int damage = this.elementalAttack(opponent);
+                opponent.takeDamage(damage);
+                System.out.println(thisPoke + "did " + damage + " damage to" + otherPoke + "!");
 
-        //if this enemy is in good health, and against weaker opponent, use elemental attack
-        if(this.counters(opponent.element)){
-            System.out.println("The enemy pokemon uses its elemental attack!");
-            return "elemental";
-
-        }
-
-        //if not against weaker opponent, use tackle
-        System.out.println("The enemy pokemon uses its basic attack, tackle!");
-        return "tackle";
-    }
-
-    //TODO: write this function for YOUR move too, not just enemy!
-    /**
-     * @param enemy pokemon
-     * @param move enemy made
-     * @param who "you" or "enemy"
-     * PRINT to terminal:
-     *   -damage done & status effect (elemental attack / basic attack)
-     *   -amount healed (heal)
-     *   -succeeded in running away? (run)
-     */
-    public void move(Pokemon enemy, String move, String who){
-        //"enemy" is enemy
-        //"this" is your pokemon
-
-        boolean enemyMove = who.equals("enemy");
-
-        if(move.equals("elemental")){
-            int damage = enemy.elementalAttack(this);
-            this.takeDamage(damage);
-
-            if(enemyMove) {
-                System.out.println("The enemy pokemon did " + damage + " damage to you!");
+                // apply status effect
+                boolean applied = this.specialAttack.isAppliedWhenCOUNTERS() && this.doesNotHaveStatus(this.specialAttack);
+                if (applied) {
+                    // randomize num rounds
+                    this.specialAttack.randomizeRounds();
+                    opponent.status = this.specialAttack;
+                    System.out.println(thisPoke + "gave" + otherPoke + this.specialAttack.getClass() + "!");
+                }
+                return false;
             }
-            else{
-                System.out.println("You dealt " + damage + "damage!");
-            }
+            case "tackle": {
+                //if this Poke is countered... do 30% less damage, else: base damage
+                int damage = (this.counters(opponent.element) ? (int) (this.effectiveBaseDamage * 0.7) : this.effectiveBaseDamage);
+                opponent.takeDamage(damage);
+                System.out.println(thisPoke + "did " + damage + " damage to" + otherPoke + "!");
 
-            //status effect
-            boolean applied = enemy.specialAttack.appliedCOUNTERS() && this.doesNotHaveStatus(enemy.specialAttack);
-            if(applied){
-                enemy.specialAttack.randomizeRounds();
-                this.status = enemy.specialAttack;
-                System.out.println("The enemy pokemon gave you " + enemy.specialAttack.getClass() + "!");
+                //status effect
+                boolean statusApplied = (this.counters(opponent.element) ? this.status.isAppliedWhenCOUNTERED() : this.status.appliedBASE());
+                boolean applied = statusApplied && this.doesNotHaveStatus(opponent.specialAttack);
+                if (applied) {
+                    this.specialAttack.randomizeRounds();
+                    opponent.status = this.specialAttack;
+                    System.out.println(thisPoke + "gave" + otherPoke + opponent.specialAttack.getClass() + "!");
+                }
+                break;
             }
         }
-        if(move.equals("tackle")){
-            //if enemy is countered... do 30% less damage, else: base damage
-            int damage = (this.counters(enemy.element) ? (int) (enemy.effectiveBaseDamage * 0.7) : enemy.effectiveBaseDamage);
-            this.takeDamage(damage);
-            System.out.println("The enemy pokemon did " + damage + " damage to you!");
 
-            //status effect
-            boolean statusApplied = (this.counters(enemy.element) ? enemy.status.appliedCOUNTERED() : enemy.status.appliedBASE());
-            boolean applied = statusApplied && this.doesNotHaveStatus(enemy.specialAttack);
-            if(applied){
-                enemy.specialAttack.randomizeRounds();
-                this.status = enemy.specialAttack;
-                System.out.println("The enemy pokemon gave you " + enemy.specialAttack.getClass() + "!");
-            }
-        }
-        if(move.equals("run")){
-            Random r1 = new Random();
-            //  1/3 chance to succeed in running
-            boolean succeeded = r1.nextInt(3) == 0;
-            if(succeeded){
-                System.out.println("And succeeded!");
-            }
-            System.out.println("but failed! :(");
-        }
-        if(move.equals("heal")){
-            enemy.healingPot();
-            System.out.println("The enemy used a healing potion!");
-        }
-
+        return false;
     }
 }

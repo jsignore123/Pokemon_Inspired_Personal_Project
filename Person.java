@@ -22,6 +22,10 @@ public class Person {
         this.pokemons.add(p);
     }
 
+    public void removePokemon(Pokemon p){
+        this.pokemons.remove(p);
+    }
+
     /**
      * @param index in list of pokemon picked
      * @return pokemon user chose
@@ -79,7 +83,7 @@ public class Person {
             String element = thisPoke.element;
             String health = thisPoke.currentHealth + "/" + thisPoke.totalHealth + " health";
             int baseDmg = thisPoke.effectiveBaseDamage;
-            System.out.println("Pokemon " + (i) + ": Level " + level + " " + element + ", " + health + ", " + baseDmg + " damage");
+            System.out.println("[" + (i) + "] : Level " + level + " " + element + ", " + health + ", " + baseDmg + " damage");
         }
     }
 

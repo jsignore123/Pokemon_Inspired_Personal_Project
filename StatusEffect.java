@@ -77,10 +77,10 @@ public class StatusEffect {
     //freeze/sleep   1/2                            1/5                 1/4
 
     /**
-     * chance SE applied when pokemon counters enemy (base 1/2)
+     * chance SE applied when pokemon counters enemy (1/2)
      * @return whether SE applied
      */
-    public boolean appliedCOUNTERS(){
+    public boolean isAppliedWhenCOUNTERS(){
         Random r = new Random();
         return r.nextInt(2) == 0;
     }
@@ -89,7 +89,7 @@ public class StatusEffect {
      * chance SE applied when pokemon is countered (1/5)
      * @return whether SE applied
      */
-    public boolean appliedCOUNTERED(){
+    public boolean isAppliedWhenCOUNTERED(){
         Random r = new Random();
         return r.nextInt(5) == 0;
     }
