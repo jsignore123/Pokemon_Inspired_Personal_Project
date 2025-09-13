@@ -1,22 +1,21 @@
+import java.util.Random;
+
 public class DecisionTree {
     // Extends
-    public DecisionTree(Pokemon pokemon, Pokemon opponent){
-        this.pokemon = pokemon;
-        this.opponent = opponent;
+    public DecisionTree(Blackboard blackboard){
+        this.blackboard = blackboard;
     };
 
-    // Enemy pokemon decision tree runs on
-    public Pokemon pokemon;
-
-    // Enemy pokemon's opponent (your pokemon)
-    public Pokemon opponent;
+    // Blackboard
+    public Blackboard blackboard;
 
 
     // BOOLEAN FUNCTIONS : Decision node
-    // isLowHealth ? (health < 25%)
-    // isHalfHeath ? (health < 50%)
-    // hasHealthPots ?
+    // isLowHealth() ? (health < 25%)
+    // isHalfHeath() ? (health < 50%)
+    // hasHealthPots() ?
     // counters(String element) opponent ?
+    // random(x : 0 - 10)  gives percentage chance (0.x chance to be true)
 
     // ACTION FUNCTIONS  : Leaf node
     // run
@@ -35,39 +34,54 @@ public class DecisionTree {
     // "yes" tree
     public DecisionTree trueNode;
 
+    public boolean random(int chance){
+        Random r1 = new Random();
+        return r1.nextInt(10) < chance;
+    }
+
     public void init(){
         // Root node : health < 0.25 ?
         this.function = "isLowHealth";
-        DecisionTree rootTrue = new DecisionTree(pokemon, opponent);
+
+        // Root True Branch
+        DecisionTree rootTrue = new DecisionTree(blackboard);
         rootTrue.function = "run";
 
         // NODE 2
-        DecisionTree node2 = new DecisionTree(pokemon, opponent);
+        DecisionTree node2 = new DecisionTree(blackboard);
         node2.function = "isHalfHealth";
 
         // NODE 3
-        DecisionTree node3 = new DecisionTree(pokemon, opponent);
+        DecisionTree node3 = new DecisionTree(blackboard);
         node3.function = "hasHealthPots";
 
         // NODE 4
-        DecisionTree node4 = new DecisionTree(pokemon, opponent);
-        node4.function = "heal";
+        DecisionTree node4 = new DecisionTree(blackboard);
+        node4.function = "random";
 
         // NODE 5
-        DecisionTree node5 = new DecisionTree(pokemon, opponent);
+        DecisionTree node5 = new DecisionTree(blackboard);
         node5.function = "counters";
 
         // NODE 6
-        DecisionTree node6 = new DecisionTree(pokemon, opponent);
+        DecisionTree node6 = new DecisionTree(blackboard);
         node6.function = "tackle";
 
         // NODE 7
-        DecisionTree node7 = new DecisionTree(pokemon, opponent);
+        DecisionTree node7 = new DecisionTree(blackboard);
         node7.function = "elemental";
+
+        // NODE 8
+        DecisionTree node8 = new DecisionTree(blackboard);
+        node8.function = "heal";
 
         // Set Node 5 Children
         node5.trueNode = node7;
         node5.falseNode = node6;
+
+        // Set Node 4 Children
+        node4.trueNode = node8;
+        node4.falseNode = node5;
 
         // Set Node 3 Children
         node3.trueNode = node4;
@@ -97,13 +111,16 @@ public class DecisionTree {
     public boolean checkCondition(){
         switch (this.function) {
             case "isLowHealth":
-                return this.pokemon.isLowHealth();
+                return this.blackboard.enemy.isLowHealth();
             case "isHalfHealth":
-                return this.pokemon.isHalfHealth();
+                return this.blackboard.enemy.isHalfHealth();
             case "hasHealthPots":
-                return this.pokemon.hasHealthPots();
+                return this.blackboard.enemy.hasHealthPots();
             case "counters":
-                return this.pokemon.counters(this.opponent.element);
+                return this.blackboard.enemy.counters(this.blackboard.you.element);
+            case "random":
+                System.out.println("The enemy randmoly decided between healing (70% : true) and attacking (30% : false)...");
+                return this.random(7);
         }
         return false;
     }
@@ -112,19 +129,19 @@ public class DecisionTree {
         switch (this.function) {
             case "run":
                 System.out.println("So, the enemy chose to run.");
-                this.pokemon.move(this.opponent, "run", "enemy");
+                this.blackboard.enemy.move(this.blackboard.you, "run", "enemy");
                 break;
             case "heal":
                 System.out.println("So, the enemy chose to heal.");
-                this.pokemon.move(this.opponent, "heal", "enemy");
+                this.blackboard.enemy.move(this.blackboard.you, "heal", "enemy");
                 break;
             case "tackle":
                 System.out.println("So, the enemy chose to tackle.");
-                this.pokemon.move(this.opponent, "tackle", "enemy");
+                this.blackboard.enemy.move(this.blackboard.you, "tackle", "enemy");
                 break;
             case "elemental":
                 System.out.println("So, the enemy chose to use its elemental attack.");
-                this.pokemon.move(this.opponent, "elemental", "enemy");
+                this.blackboard.enemy.move(this.blackboard.you, "elemental", "enemy");
                 break;
         }
     }

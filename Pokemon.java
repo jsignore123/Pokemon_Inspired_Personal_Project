@@ -20,8 +20,8 @@ public class Pokemon {
     public int baseDamage;
     public int currentHealth;
     public int totalHealth;
-    public int healthPots;
-    public StatusEffect specialAttack = new StatusEffect();
+    public int healthPots; // only for enemy
+    public StatusEffect specialAttack; // this poke's elemental/status applied
     public StatusEffect status = new StatusEffect();
 
     public void printStats(String thisPoke){
@@ -29,7 +29,10 @@ public class Pokemon {
         String element = this.element;
         String health = this.currentHealth + "/" + this.totalHealth + " health";
         int baseDmg = this.effectiveBaseDamage;
-        System.out.println(thisPoke + " POKEMON: Level " + level + " " + element + ", " + health + ", " + baseDmg + " damage");
+        int numPots = this.healthPots;
+        System.out.println(thisPoke + " POKEMON: Level " + level + " " + element + ", " + health + ", " + baseDmg + " damage" +
+                (thisPoke.equals("\nENEMY") ? ", has " + numPots + " health pots" : "")
+                + (this.noStatus() ? "" : ", Status effect: " + this.status.getClass() + " for " + this.status.roundsLeft + " rounds"));
     }
 
 
@@ -112,9 +115,9 @@ public class Pokemon {
         if(this.element.equals("poison")){
             this.specialAttack = new Poison();
         }
-//      if(this.element.equals("water")){
-//        this.specialAttack = nothing lol
-//      }
+        if(this.element.equals("water")){
+            this.specialAttack = new StatusEffect(); //nothing lol
+        }
         if(this.element.equals("grass")){
             this.specialAttack = new Siphon();
         }
@@ -177,9 +180,9 @@ public class Pokemon {
         if(this.element.equals("fire")){
             this.specialAttack = new Burn();
         }
-//      if(this.element.equals("water")){
-//        this.specialAttack = nothing lol
-//      }
+        if(this.element.equals("water")){
+            this.specialAttack = new StatusEffect(); //nothing lol
+        }
         if(this.element.equals("grass")){
             this.specialAttack = new Siphon();
         }
@@ -306,7 +309,7 @@ public class Pokemon {
      * gets rid of paralysis
      */
     public void heal(){
-        int amountHealed = (int) (this.totalHealth * 0.3);
+        int amountHealed = (int) ((this.totalHealth) * 0.4);
         this.currentHealth += amountHealed;
         if(this.currentHealth > this.totalHealth){
             this.currentHealth = this.totalHealth;
@@ -323,7 +326,7 @@ public class Pokemon {
      * @param se status effect
      * @return whether this pokemon has that status effect
      */
-    public boolean doesNotHaveStatus(StatusEffect se){
+    public boolean doesNotHaveThisStatus(StatusEffect se){
         if(se.isIntimidate()){
             return !this.status.isIntimidate();
         }
@@ -352,6 +355,17 @@ public class Pokemon {
     }
 
     /**
+     * TODO: set status to null by default to avoid this hardcoding
+     * @return whether this pokemon has a status effect currently
+     */
+    public boolean noStatus(){
+        return this.status == null || (!this.status.isIntimidate() && !this.status.isBurn() && !this.status.isConfusion() &&
+                !this.status.isFreeze() && !this.status.isPoison() && !this.status.isParalysis() &&
+                !this.status.isSiphon() && !this.status.isSleep());
+    }
+
+    /**
+     * @param who is getting SE applied
      * Applies effect of current status to pokemon (DOT, DOT/heal, self attack, lower dmg)
      * also prints to terminal status effect
      * lowers rounds left in status, applies status until status is over
@@ -366,40 +380,50 @@ public class Pokemon {
      * miss attack                          (paralysis)
      * miss turn                            (freeze, sleep)
      */
-    public void applyStatus(){
-        if(this.status.roundsLeft == 0){
-            this.effectiveBaseDamage = this.baseDamage;
-            this.status = new StatusEffect();
-            return;
-        }
-
+    public void applyStatus(String who, Pokemon opponent){
         if (this.status.isBurn() || this.status.isPoison()){
             int damage = (int) (Burn.DOT * this.totalHealth);
             this.currentHealth -= damage;
-            System.out.println("Your pokemon took " + damage + " damage from the " + this.status.getClass() + " effect!");
+            System.out.println(who + " pokemon took " + damage + " damage from the " + this.status.getClass() + " effect!");
         }
-        if(this.status.isSiphon()){
+        else if(this.status.isSiphon()){
             int damage = (int) (Siphon.DOT * this.totalHealth);
             this.currentHealth -= damage;
-            System.out.println("Your pokemon took " + damage + " damage from the " + this.status.getClass() + " effect!");
-            //TODO: add in main function that heals enemy for SIPHON.heal * pokemon.totalHealth
+            System.out.println(who + " pokemon took " + damage + " damage from the " + this.status.getClass() + " effect!");
+
+            String otherPoke = (who.equals("Your") ? "The Enemy" : "Your");
+            int heal = (int) (Siphon.HEAL * this.totalHealth);
+            opponent.currentHealth += heal;
+            if(opponent.currentHealth > opponent.totalHealth){
+                opponent.currentHealth = opponent.totalHealth;
+                System.out.println(otherPoke + "healed to full health using Siphon!");
+            }
+            else{
+                System.out.println(otherPoke + "healed from Siphon for " + heal + "!");
+            }
         }
-        if(this.status.isConfusion()){
+        else if(this.status.isConfusion()){
             int damage = (int) (Confusion.SELF_ATTACK * this.baseDamage);
             this.currentHealth -= damage;
-            System.out.println("Your pokemon got confused and attacked itself for " + damage + "damage...");
+            System.out.println(who + "pokemon got confused and attacked itself for " + damage + "damage...");
             //TODO: add in main function that checks if confusion is applied and attacks itself
         }
-        if(this.status.isIntimidate()){
+        else if(this.status.isIntimidate()){
             this.effectiveBaseDamage = (int) (Intimidate.LOWER_DMG * this.baseDamage);
-            System.out.println("Your pokemon feels intimidated and does half as much damage...");
+            System.out.println(who + "pokemon feels intimidated and does half as much damage...");
         }
 
         this.status.roundsLeft--;
+
+        if(this.status.roundsLeft <= 0){
+            this.effectiveBaseDamage = this.baseDamage;
+            this.status = new StatusEffect();
+        }
     }
 
     /**
      * TODO: override updateXP in other scenarios that xp might be increased ?
+     * TODO: print xp gained
      * updates your XP/level after killing an enemy
      * @param enemy killed
      */
@@ -434,7 +458,7 @@ public class Pokemon {
      * @return whether run was successful
      */
     public boolean move(Pokemon opponent, String move, String who){
-        // Value needed for print statements
+        // Strings for print statements
         String thisPoke = "", otherPoke = "";
         thisPoke = (who.equals("enemy") ? "The Enemy Pokemon " : "You ");
         otherPoke = (who.equals("enemy") ? " you " : " the enemy Pokemon ");
@@ -452,13 +476,14 @@ public class Pokemon {
                 this.heal();
                 return false;
             case "elemental": {
-                // apply damage to opponent and print statement
+                // apply damage done to opponent and print
                 int damage = this.elementalAttack(opponent);
                 opponent.takeDamage(damage);
                 System.out.println(thisPoke + "did " + damage + " damage to" + otherPoke + "!");
 
-                // apply status effect
-                boolean applied = this.specialAttack.isAppliedWhenCOUNTERS() && this.doesNotHaveStatus(this.specialAttack);
+                // apply status effect to opponent
+                boolean applied = (!this.element.equals("water")) && // water pokemon have no special attack/status effect to give
+                        this.specialAttack.isAppliedWhenCOUNTERS() && opponent.doesNotHaveThisStatus(this.specialAttack);
                 if (applied) {
                     // randomize num rounds
                     this.specialAttack.randomizeRounds();
@@ -468,14 +493,14 @@ public class Pokemon {
                 return false;
             }
             case "tackle": {
-                //if this Poke is countered... do 30% less damage, else: base damage
-                int damage = (this.counters(opponent.element) ? (int) (this.effectiveBaseDamage * 0.7) : this.effectiveBaseDamage);
-                opponent.takeDamage(damage);
-                System.out.println(thisPoke + "did " + damage + " damage to" + otherPoke + "!");
+                // Full 100% damage for tackle
+                opponent.takeDamage(this.effectiveBaseDamage);
+                System.out.println(thisPoke + "did " + this.effectiveBaseDamage + " damage to" + otherPoke + "!");
 
-                //status effect
-                boolean statusApplied = (this.counters(opponent.element) ? this.status.isAppliedWhenCOUNTERED() : this.status.appliedBASE());
-                boolean applied = statusApplied && this.doesNotHaveStatus(opponent.specialAttack);
+                // status effect to opponent
+                boolean statusApplied = (!this.element.equals("water")) && // water pokemon have no special attack/status effect to give
+                        (opponent.counters(this.element) ? this.status.isAppliedWhenCOUNTERED() : this.status.appliedBASE());
+                boolean applied = statusApplied && this.doesNotHaveThisStatus(opponent.specialAttack);
                 if (applied) {
                     this.specialAttack.randomizeRounds();
                     opponent.status = this.specialAttack;

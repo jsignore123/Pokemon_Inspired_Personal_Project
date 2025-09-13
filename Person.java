@@ -83,7 +83,8 @@ public class Person {
             String element = thisPoke.element;
             String health = thisPoke.currentHealth + "/" + thisPoke.totalHealth + " health";
             int baseDmg = thisPoke.effectiveBaseDamage;
-            System.out.println("[" + (i) + "] : Level " + level + " " + element + ", " + health + ", " + baseDmg + " damage");
+            System.out.println("[" + (i) + "] : Level " + level + " " + element + ", " + health + ", " + baseDmg + " damage" +
+                    (thisPoke.noStatus() ? "" : ", Status effect: " + thisPoke.status.getClass() + " for " + thisPoke.status.roundsLeft + " rounds"));
         }
     }
 
