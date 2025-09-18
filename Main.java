@@ -38,10 +38,11 @@ public class Main {
             Random r1 = new Random(System.currentTimeMillis());
             int chance = r1.nextInt(chanceForEnemyToSpawn);
 
-            //if enemy spawns and you have pokemon
+            ///////////////////////////////////////////
+            // * ENEMY SPAWNS and you have pokemon * //
+            ///////////////////////////////////////////
             if(chance == 0 && !YOU.hasNoPokemon()){
-                // fight ongoing
-                boolean fightOngoing = true;
+                boolean fightOngoing = true; // fight ongoing
 
                 // prompt user to pick pokemon to fight with
                 System.out.println("An enemy appeared! Which pokemon will fight with? (enter int index)");
@@ -60,7 +61,9 @@ public class Main {
                 // initialize blackboard values (decision tree already has pointer to blackboard as field)
                 blackboard.setBlackboard(enemy, currentPokemon);
 
-                // Run fight!
+                ////////////////
+                // RUN FIGHT! //
+                ////////////////
                 while(fightOngoing) {
                     // TODO: switch out pokemon?
 
